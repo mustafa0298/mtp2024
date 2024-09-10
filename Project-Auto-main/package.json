@@ -1,0 +1,18 @@
+{
+    "dependencies": {
+        "axios": "^1.6.8",
+        "busboy": "^1.6.0",
+        "cors": "^2.8.5",
+        "crypto": "^1.0.1",
+        "dotenv": "^16.4.5",
+        "express": "^4.19.2",
+        "form-data": "^4.0.0",
+        "http": "^0.0.1-security",
+        "node-fetch": "^3.3.2",
+        "node-schedule": "^2.1.1",
+        "nodemon": "^3.1.0",
+        "request": "^2.88.2",
+        "socket.io": "^4.7.4",
+        "unzip-stream": "^0.3.1"
+    }
+}

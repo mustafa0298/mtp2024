@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Devices Available</title>
+    <style>
+        /* Basic reset */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 20px;
+            background-color: #f0f0f0;
+            color: #333;
+        }
+
+        h1 {
+            color: #005a9c;
+            margin-bottom: 20px;
+        }
+
+        input[type="file"],
+        input[type="text"] {
+            border: 1px solid #ccc;
+            padding: 10px;
+            margin-right: 10px;
+            width: calc(100% - 150px);
+            max-width: 500px;
+        }
+
+        button {
+            background-color: #0078d7;
+            color: #ffffff;
+            border: none;
+            padding: 10px 15px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        button:hover {
+            background-color: #005a9c;
+        }
+
+        .log {
+            border: 1px solid #ddd;
+            padding: 10px;
+            margin-top: 20px;
+            max-height: 200px;
+            overflow-y: scroll;
+            background-color: #fff;
+        }
+
+        .log p {
+            margin-bottom: 10px;
+        }
+
+        label {
+            display: block;
+            margin: 20px 0 10px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        th,
+        td {
+            text-align: left;
+            padding: 8px;
+            border: 1px solid #ddd;
+        }
+
+        th {
+            background-color: #0078d7;
+            color: white;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Available Dongles</h1>
+    <table id="dongleTable">
+        <thead>
+            <tr>
+                <th>Sr.No</th>
+                <th>ProductID</th>
+                <!-- <th>ProductName</th> -->
+                <!-- <th>Port</th> -->
+                <th>Location</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            <!-- Get data from /dongles -->
+
+
+        </tbody>
+    </table>
+</body>
+<script>
+    // This function fetches dongle data and populates the table
+    function fetchAndPopulateDongles() {
+        // Assuming you are serving your HTML from the same domain as your API
+        fetch('/dongles')
+            .then(response => response.json()) // Convert the response to JSON
+            .then(data => {
+                // Get the table's tbody element
+                const tableBody = document.getElementById('dongleTable').getElementsByTagName('tbody')[0];
+
+                // Clear existing table rows
+                tableBody.innerHTML = '';
+
+                // Iterate over each dongle and add a row to the table
+                data.forEach((dongle, index) => {
+                    const row = tableBody.insertRow();
+                    row.innerHTML = `
+                        <td>${index + 1}</td>
+                        <td>${dongle.id}</td>
+                        <!--<td>${dongle.product}</td>-->
+                        <!--<td>${dongle.port}</td>-->
+                        <td>Fixed</td>
+                        <td><button>Deploy</button></td>
+                    `;
+                });
+            })
+            .catch(error => console.error('Error fetching dongles:', error));
+    }
+
+    // Call the function when the page has finished loading
+    document.addEventListener('DOMContentLoaded', fetchAndPopulateDongles);
+</script>
+
+</html>

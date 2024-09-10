@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NRF52840 Uploader</title>
+  <style>
+    /* Basic reset */
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      margin: 20px;
+      background-color: #f0f0f0;
+      color: #333;
+    }
+
+    h1 {
+      color: #005a9c;
+      margin-bottom: 20px;
+    }
+
+    input[type="file"],
+    input[type="text"] {
+      border: 1px solid #ccc;
+      padding: 10px;
+      margin-right: 10px;
+      width: calc(100% - 150px);
+      max-width: 500px;
+    }
+
+    button {
+      background-color: #0078d7;
+      color: #ffffff;
+      border: none;
+      padding: 10px 15px;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+
+    button:hover {
+      background-color: #005a9c;
+    }
+
+    .log {
+      border: 1px solid #ddd;
+      padding: 10px;
+      margin-top: 20px;
+      max-height: 200px;
+      overflow-y: scroll;
+      background-color: #fff;
+    }
+
+    .log p {
+      margin-bottom: 10px;
+    }
+
+    label {
+      display: block;
+      margin: 20px 0 10px;
+    }
+  </style>
+</head>
+
+<body>
+  <h1>NRF52840 Uploader</h1>
+  <input type="file" id="code-file" accept=".zip">
+  <button id="upload-code">Upload Code</button><br>
+
+  <label for="folder-name">Folder Name:</label>
+  <input type="text" id="folder-name" placeholder="Enter folder name"><br>
+  <label for="dfu-upload-name">Dfu Upload Name:</label>
+  <input type="text" id="dfu-upload-name" placeholder="Enter dfu upload name"><br>
+  <label for="device-id">Device Id:</label>
+  <input type="text" id="device-id" placeholder="Enter device id">
+  <button id="deploy-code">Deploy Code</button><br>
+
+  <label for="device-id2">Device Id:</label>
+  <input type="text" id="device-id2" placeholder="Enter device id">
+  <button id="start-log">Start Log</button>
+  <button id="stop-log">Stop Log</button>
+  <div id="log" class="log"></div>
+
+  <script>
+    const uploadButton = document.getElementById('upload-code');
+    const codeFile = document.getElementById('code-file');
+    const folderNameInput = document.getElementById('folder-name');
+    const dfuUploadNameInput = document.getElementById('dfu-upload-name');
+    const deviceIdInput = document.getElementById('device-id');
+
+    const deployButton = document.getElementById('deploy-code');
+
+    const deviceId2Input = document.getElementById('device-id2');
+    const startLogButton = document.getElementById('start-log');
+    const stopLogButton = document.getElementById('stop-log');
+    const logElement = document.getElementById('log');
+    let ws; // Define variable for WebSocket connection
+
+    function scrollToBottom() {
+      logElement.scrollTop = logElement.scrollHeight; // Set scroll position to bottom
+    }
+
+    scrollToBottom(); // Scroll to bottom on page load
+
+    uploadButton.addEventListener('click', () => {
+      const file = codeFile.files[0];
+      const folderName = folderNameInput.value.trim();
+
+      if (!file) {
+        logElement.innerHTML = '<p>Please select a code file (ZIP format).</p>';
+        return;
+      }
+
+      const formData = new FormData();
+      formData.append('code', file);
+
+      fetch('http://localhost:3000/upload-code', {
+        method: 'POST',
+        body: formData
+      })
+        .then(response => response.text())
+        .then(message => {
+          logElement.innerHTML = `<p>${message}</p>`;
+        })
+        .catch(error => {
+          console.error(error);
+          logElement.innerHTML = `<p>Error uploading code!</p>`;
+        });
+    });
+
+    deployButton.addEventListener('click', () => {
+      fetch('http://localhost:3000/deploy-code?folderName=' + folderNameInput.value.trim() + '&dfuUploadName=' + dfuUploadNameInput.value.trim() + '&deviceId=' + deviceIdInput.value.trim())
+        .then(response => response.text())
+        .then(message => {
+          logElement.innerHTML = `<p>${message}</p>`;
+        })
+        .catch(error => {
+          console.error(error);
+          logElement.innerHTML = `<p>Error deploying code!</p>`;
+        });
+    });
+
+    startLogButton.addEventListener('click', () => {
+      if (!ws) {
+        ws = new WebSocket('ws://localhost:3000'); // Connect to WebSocket server
+        ws.onopen = () => {
+          console.log('WebSocket connection opened');
+          // Send 'start-log' and device ID message
+          ws.send('start-log ' + deviceId2Input.value.trim());
+          logElement.innerHTML = '<p>Log stream started.</p>';
+        };
+        ws.onmessage = (event) => {
+          // Decode the event (blob) data and append to log element
+          const timestamp = new Date().toLocaleTimeString();
+          event.data.text().then(text => {
+            logElement.innerHTML += `<p><strong>${timestamp}</strong>: ${text}</p>`;
+            scrollToBottom(); // Scroll to bottom on new message
+          });
+        };
+        ws.onclose = () => {
+          console.log('WebSocket connection closed');
+          logElement.innerHTML += '<p>Log stream closed.</p>';
+        };
+      }
+    });
+
+    stopLogButton.addEventListener('click', () => {
+      if (ws) {
+        ws.send('stop-log');
+        ws.close(); // Close WebSocket connection
+        ws = null;
+      }
+    });
+  </script>
+</body>
+
+</html>
